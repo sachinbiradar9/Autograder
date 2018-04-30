@@ -6,18 +6,20 @@ import numpy as np
 import os
 import re
 
+# specifies if data picked from training or testing folder
 test = False
 
-#nltk
+# nltk downloads check wn
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 
-# Parser
+# Please make sure the server is running
 parser = nltk.parse.corenlp.CoreNLPParser(url="http://localhost:9000")
 
 # Enchant
 dictionary_us = enchant.Dict("en_US")
 dictionary_uk = enchant.Dict("en_UK")
+# Read all city, country, language names from files in word_list and populate it in enchant session
 for words_file in os.listdir('./resources/word_lists/'):
      words = open('./resources/word_lists/' + words_file, 'r').read().splitlines()
      for word in words:
@@ -26,6 +28,10 @@ for words_file in os.listdir('./resources/word_lists/'):
 
 class EssayData:
     def __init__(self):
+        """
+        Initialize training/testing data
+        """
+          
         if test:
             self.X, self.P, self.files  = self.load_essays('../input/testing/')
         else:
@@ -33,6 +39,9 @@ class EssayData:
 
 
     def load_essays(self, filename):
+        """
+        Load data from file
+        """
         X = []; P = []; Y = []; files = []
         label_dict = {}
 
@@ -62,6 +71,14 @@ class EssayData:
 
 class Essay:
     def __init__(self, essay, topic):
+        """
+        Initialize the Essay object and calculates all it's score
+        
+        Args:
+            essay (str): the written essay
+            topic (str): topic of the essay
+        """
+
         self.essay = essay
         self.topic = topic
 
@@ -87,18 +104,35 @@ class Essay:
         self.topic_coherence_score = self.get_topic_coherence_score()
 
 
-    def apply_hash(self, text, reverse=False):
+    def apply_hash(self, essay, reverse=False):
+        """
+        Convert e.g to e#g# or reverse depending on reverse parameter
+        
+        Args:
+            essay (str): the written essay
+            reverse (Boolean): to forward map or reverse map
+            
+        Returns:
+            essay (str): converted essay according to mapping
+        """
+          
         if not reverse:
             replace_dict = {"e.g.": "e#g#", "i.e.": "i#e#", "Dr.": "Dr#", "Mr.": "Mr#", "Mrs.": "Mrs#", "Sr.": "Sr#", "Jr.": "Jr#", "etc.": "etc#"}
         else:
             replace_dict = {"e#g#": "e.g.", "i#e#": "i.e.", "Dr#": "Dr.", "Mr#": "Mr.", "Mrs#": "Mrs.", "Sr#": "Sr.", "Jr#": "Jr.", "etc#": "etc."}
         replace = dict((re.escape(k), v) for k, v in replace_dict.iteritems())
         pattern = re.compile("|".join(replace.keys()))
-        text = pattern.sub(lambda m: replace[re.escape(m.group(0))], text)
-        return text
+        text = pattern.sub(lambda m: replace[re.escape(m.group(0))], essay)
+        return essay
 
 
     def get_sentences(self):
+        """
+        Return essay split in sentences
+        
+        Returns:
+            sentences (list): list of sentences
+        """
         sents = []
         essay = self.apply_hash(self.essay, reverse=False)
         essay = essay.replace('.', ' . ').replace('\n', ' . ')
