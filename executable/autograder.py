@@ -594,12 +594,14 @@ for index,essay_x in enumerate(essay_data.X):
 
 
 """
+# Write the scores and grade to file 
 results_file_path = '../output/results.txt'
 with open(results_file_path,'w+') as f:
     for content in file_contents:
         f.write(content)
 """
 
+# Plot distribution of attributes
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
