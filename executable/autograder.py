@@ -42,6 +42,7 @@ class EssayData:
         """
         Load data from file
         """
+          
         X = []; P = []; Y = []; files = []
         label_dict = {}
 
@@ -133,6 +134,7 @@ class Essay:
         Returns:
             sentences (list): list of sentences
         """
+          
         sents = []
         essay = self.apply_hash(self.essay, reverse=False)
         essay = essay.replace('.', ' . ').replace('\n', ' . ')
@@ -168,6 +170,13 @@ class Essay:
 
 
     def compute_sentence_score(self):
+        """
+        Return sentence score
+        
+        Returns:
+            (int): sentence score
+        """
+          
         no_of_sents = len(self.sents)
         if no_of_sents <= 5:
             return 1
@@ -193,6 +202,13 @@ class Essay:
 
 
     def compute_misspell_score(self):
+        """
+        Return misspell score
+        
+        Returns:
+            (int): misspell score
+        """
+          
         no_of_mispells = len(self.misspells)
         if no_of_mispells <= 5:
             return 0
@@ -258,6 +274,13 @@ class Essay:
 
 
     def compute_agreement_score(self):
+        """
+        Return agreement score
+        
+        Returns:
+            (int): agreement score
+        """
+          
         no_of_agreement_errors = len(self.agreement_errors)
         if no_of_agreement_errors <= 1:
             return 5
@@ -376,6 +399,13 @@ class Essay:
 
 
     def compute_verb_score(self):
+        """
+        Return verb score
+        
+        Returns:
+            (int): verb score
+        """
+          
         no_of_verb_errors = len(self.verb_errors)
         if no_of_verb_errors <= 1:
             return 5
@@ -411,6 +441,13 @@ class Essay:
 
 
     def compute_sentence_formation_score(self):
+        """
+        Return sentence formation score
+        
+        Returns:
+            (int): sentence formation score
+        """
+          
         no_of_sentence_formation_errors = len(self.sentence_formation_errors)
         if no_of_sentence_formation_errors <= 5:
             return 5
@@ -466,6 +503,13 @@ class Essay:
 
 
     def compute_text_coherence_score(self):
+        """
+        Return text coherence score
+        
+        Returns:
+            (int): text coherence score
+        """
+          
         no_of_text_coherence_errors = len(self.text_coherence_errors)
         if no_of_text_coherence_errors == 0:
             return 5
@@ -476,6 +520,13 @@ class Essay:
 
 
     def get_topic_coherence_score(self):
+        """
+        Return topic coherence score
+        
+        Returns:
+            (int): topic coherence score
+        """
+          
         from nltk.corpus import wordnet as wn
 
         topic_words = nltk.word_tokenize(self.topic)
