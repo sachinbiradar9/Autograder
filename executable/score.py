@@ -1,19 +1,3 @@
-from pattern.en import parsetree
-import csv
-import enchant
-import nltk
-import numpy as np
-import os
-import re
-from data import EssayData
-from score import Essay
-
-# specifies if data picked from training or testing folder
-test = False
-
-# nltk downloads check wn
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
 
 # Please make sure the server is running
 parser = nltk.parse.corenlp.CoreNLPParser(url="http://localhost:9000")
@@ -26,7 +10,6 @@ for words_file in os.listdir('./resources/word_lists/'):
      words = open('./resources/word_lists/' + words_file, 'r').read().splitlines()
      for word in words:
          dictionary_us.add_to_session(word.lower())
-
 
 
 class Essay:
@@ -518,57 +501,3 @@ class Essay:
             return 5
 
 
-
-
-
-essay_data = EssayData()
-file_contents = []
-
-for index,essay_x in enumerate(essay_data.X):
-    print essay_data.Y[index], index
-    essay = Essay(essay_x, essay_data.P[index])
-
-    score = (
-        2*essay.sentence_score
-        - 2*essay.misspell_score
-        + 0.2*essay.agreement_score
-        + 0.8*essay.verb_score
-        + 2*essay.sentence_formation_score
-        + 2*essay.text_coherence_score
-        + 3*essay.topic_coherence_score
-    )
-    grade = 'high' if score > 40 else 'low'
-    file_contents.append(
-        essay_data.files[index] + ';' +
-        str(essay.sentence_score) + ';' +
-        str(essay.misspell_score) + ';' +
-        str(essay.agreement_score) + ';' +
-        str(essay.verb_score) + ';' +
-        str(essay.sentence_formation_score) + ';' +
-        str(essay.text_coherence_score) + ';' +
-        str(essay.topic_coherence_score) + ';' +
-        str(score) + ';' +
-        grade + '\n'
-    )
-
-
-# Write the scores and grade to file
-results_file_path = '../output/results.txt'
-with open(results_file_path,'w+') as f:
-    for content in file_contents:
-        f.write(content)
-
-
-"""
-# Plot distribution of attributes
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-bins = list(range(50))
-plt.title('Text coherence error distribution for high class')
-plt.hist(sv1)
-plt.figure()
-plt.title('Text coherence error distribution for low class')
-plt.hist(sv0)
-plt.show()
-"""
