@@ -1,12 +1,12 @@
+from pattern.en import parsetree
 import csv
 import enchant
 import nltk
 import numpy as np
 import os
 import re
-from pattern.en import parsetree
 
-test = True
+test = False
 
 #nltk
 nltk.download('punkt')
@@ -61,9 +61,11 @@ class EssayData:
 
 
 class Essay:
-    def __init__(self, essay):
+    def __init__(self, essay, topic):
         self.essay = essay
+        self.topic = topic
 
+        self.sentences = []
         self.sents = self.get_sentences()
         self.sentence_score = self.compute_sentence_score()
 
@@ -73,8 +75,16 @@ class Essay:
         self.agreement_errors = self.get_agreement_errors()
         self.agreement_score = self.compute_agreement_score()
 
-        self.verb_errors = self.count_verb_errors()
+        self.verb_errors = self.get_verb_errors()
         self.verb_score = self.compute_verb_score()
+
+        self.sentence_formation_errors = self.get_sentence_formation_errors()
+        self.sentence_formation_score = self.compute_sentence_formation_score()
+
+        self.text_coherence_errors = self.get_text_coherence_errors()
+        self.text_coherence_score = self.compute_text_coherence_score()
+
+        self.topic_coherence_score = self.get_topic_coherence_score()
 
 
     def apply_hash(self, text, reverse=False):
@@ -101,6 +111,7 @@ class Essay:
         sents = list(filter(lambda x: x!= '.', sents))
         sents = list(map(lambda x: self.apply_hash(x,reverse=True), sents))
         sentences = []
+        self.sentences = sents
         for sent in sents:
             if "," in sent:
                 comma_seaprated = sent.split(",")
@@ -159,6 +170,7 @@ class Essay:
             return 3
         else:
             return 4
+
 
     def traverse_tree(self, tree, tag):
         for subtree in tree:
@@ -225,7 +237,7 @@ class Essay:
             return 1
 
 
-    def count_verb_errors(self):
+    def get_verb_errors(self):
         verb_errors = []
         verb_list=["VB","VBZhas","VBZwas","VBZis","MD","VBD","VBG","VBN","VBP"]
         bigram_agreement=["VBD,VBP","MD,VBZis","MD,VBZhas","MD,VBD","MD,VBN","MD,VBG","MD,VBP","VBP,VBP","MD,MD",
@@ -243,7 +255,6 @@ class Essay:
         sents = self.sents
         for sent in sents:
             x=nltk.word_tokenize(sent)
-
             tagged = nltk.pos_tag(x)
 
             disambi=[]
@@ -327,8 +338,8 @@ class Essay:
                 elif verb_chunk in tense_agreement:
                     verb_errors.append((word_chunk, verb_chunk))
 
-
         return verb_errors
+
 
     def compute_verb_score(self):
         no_of_verb_errors = len(self.verb_errors)
@@ -344,12 +355,145 @@ class Essay:
             return 1
 
 
+    def check_sentence_formation_error(self, tree):
+        for subtree in tree:
+            if type(subtree) == nltk.tree.Tree:
+                if subtree.label().find('FRAG') > -1 and tree.label().find('S') != 0:
+                    return "FRAG"
+                elif subtree.label().find('SBAR') > -1 and tree.label() not in ['NP', 'VP', 'S']:
+                    return "SBAR"
+                else:
+                    return self.check_sentence_formation_error(subtree)
+
+
+    def get_sentence_formation_errors(self):
+        sentence_formation_errors = []
+        for sent in self.sentences:
+            parse_tree = next(parser.raw_parse(sent))
+            error = self.check_sentence_formation_error(parse_tree)
+            if error:
+                sentence_formation_errors.append(error)
+        return sentence_formation_errors
+
+
+    def compute_sentence_formation_score(self):
+        no_of_sentence_formation_errors = len(self.sentence_formation_errors)
+        if no_of_sentence_formation_errors <= 5:
+            return 5
+        elif no_of_sentence_formation_errors <= 10:
+            return 4
+        elif no_of_sentence_formation_errors <= 12:
+            return 3
+        elif no_of_sentence_formation_errors <= 18:
+            return 2
+        else:
+            return 1
+
+
+    def get_text_coherence_errors(self):
+        text_coherence_errors = []
+        author = ['i', 'we', 'me', 'myself', 'ourself', 'us', 'our', 'my', 'mine']
+        reader = ['you', 'yourself', 'your', 'yours']
+        male = ['he', 'him', 'himself', 'his']
+        female = ['she', 'her', 'herself']
+        neutral_singular = ['it', 'itself', 'oneself', 'its', 'ourselves']
+        neutral_plural = ['they', 'them', 'themself', 'their', 'themselves']
+        sent_tagged = []
+        sent_words = []
+
+        for i, sent in enumerate(self.sentences):
+            x=nltk.word_tokenize(sent)
+            tagged = nltk.pos_tag(x)
+            sent_tagged.append([tag for word,tag in tagged])
+            sent_words.append(x)
+
+            if i==0:
+                previous_tags = []
+                previous_words = []
+            elif i==1:
+                previous_tags = sent_tagged[i-1]
+                previous_words = sent_words[i-1]
+            elif i==2:
+                previous_tags = sent_tagged[i-1] + sent_tagged[i-2]
+                previous_words = sent_words[i-1] + sent_words[i-2]
+
+
+            for j, (word, tag) in enumerate(tagged):
+                if tag in ['PRP', 'PRP$']:
+                    if word.lower() in author or word.lower() in reader:
+                        continue
+                    elif word.lower() in female or word.lower() in male:
+                        if 'NN' not in previous_tags and 'NNP' not in previous_tags and 'NN' not in sent_tagged[i][:j] and 'NNP' not in sent_tagged[i][:j]:
+                            text_coherence_errors.append(tag)
+                    elif word.lower() in neutral_plural:
+                        if 'NNS' not in previous_tags and 'NNPS' not in previous_tags and 'NNS' not in sent_tagged[i][:j] and 'NNPS' not in sent_tagged[i][:j]:
+                            text_coherence_errors.append(tag)
+        return text_coherence_errors
+
+
+    def compute_text_coherence_score(self):
+        no_of_text_coherence_errors = len(self.text_coherence_errors)
+        if no_of_text_coherence_errors == 0:
+            return 5
+        elif no_of_text_coherence_errors == 1:
+            return 3
+        else:
+            return 1
+
+
+    def get_topic_coherence_score(self):
+        from nltk.corpus import wordnet as wn
+
+        topic_words = nltk.word_tokenize(self.topic)
+        essay_words = nltk.word_tokenize(self.essay)
+
+        maximum_score = 0.0
+        for topic_word in topic_words:
+            for essay_word in essay_words:
+                t_synset = wn.synsets(topic_word)
+                s_synset = wn.synsets(essay_word)
+                maximum_similarity = -1
+                if (len (t_synset) != 0 and len (s_synset) != 0):
+                    for synset_one in t_synset:
+                        for synset_two in s_synset:
+                            similarity = wn.path_similarity (synset_one,synset_two)
+                            if (similarity == None):
+                                continue
+                            elif (similarity > maximum_similarity) and (similarity != None):
+                                maximum_similarity = similarity
+                                maximum_score+=maximum_similarity
+        if maximum_score <= 300:
+            return 1
+        elif maximum_score <= 500:
+            return 2
+        elif maximum_score <= 600:
+            return 3
+        elif maximum_score <= 900:
+            return 4
+        else:
+            return 5
+
+
+
+
+
 essay_data = EssayData()
 file_contents = []
 
+sv0 = []
+sv1 = []
 for index,essay_x in enumerate(essay_data.X):
-    essay = Essay(essay_x)
-    score = 2*essay.sentence_score - essay.misspell_score + essay.agreement_score + essay.verb_score
+    print essay_data.Y[index], index
+    essay = Essay(essay_x, essay_data.P[index])
+
+    score = 2*essay.sentence_score - 2*essay.misspell_score + 0.2*essay.agreement_score + 0.8*essay.verb_score + 2*essay.sentence_formation_score + 2*essay.text_coherence_score + 3*essay.topic_coherence_score
+    if essay_data.Y[index] == 1:
+        #sv1.append( (len(essay.sentence_formation_errors)*100.0)/ len(essay.sentences))
+        sv1.append(score)
+    else:
+        #sv0.append( (len(essay.sentence_formation_errors)*100.0)/ len(essay.sentences))
+        sv0.append(score)
+
     grade = 'unknown'
 
     file_contents.append(
@@ -364,26 +508,20 @@ for index,essay_x in enumerate(essay_data.X):
     )
 
 
+"""
 results_file_path = '../output/results.txt'
 with open(results_file_path,'w+') as f:
     for content in file_contents:
         f.write(content)
-
 """
+
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-bins = list(range(6))
-plt.title('Agreement error distribution for high class')
-plt.hist(sv1, bins=bins)
+bins = list(range(50))
+plt.title('Text coherence error distribution for high class')
+plt.hist(sv1)
 plt.figure()
-plt.title('Agreement error distribution for low class')
-plt.hist(sv0, bins=bins)
-plt.figure()
-plt.title('Verb error distribution for high class')
-plt.hist(cv1, bins=bins)
-plt.figure()
-plt.title('Verb error distribution for low class')
-plt.hist(cv0, bins=bins)
+plt.title('Text coherence error distribution for low class')
+plt.hist(sv0)
 plt.show()
-"""
