@@ -1,3 +1,3 @@
 # Autograder
 
-To run autograder enter - `bash run.sh`
+To run autograder go to executable and enter - `bash run.sh`
