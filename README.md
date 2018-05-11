@@ -3,20 +3,26 @@
 
 System that can automatically grade student essays. NLP techniques were the center of automated scoring. Various factors to grade were -
 
-<ol style= "list-style-type: lower-alpha;">
-<li>ok</li>
+<ol type="a">
+  <li>Length of the essay</li>  
+  <li>Spelling mistakes</li>
+  
+  <li>Syntax/Grammar</li>
+  <ol type="i">
+    <li>Subject-Verb agreement</li>
+    <li>Verb tense / missing verb / extra verb</li>  
+    <li>Sentence formation</li>
+  </ol>
+  
+  <li>Semantics</li>
+    <ol type="i">
+      <li> Text coherent</li>
+      <li>Topic coherence</li>
+    </ol>
 </ol>
-(a) Length of the essay  
-(b) Spelling mistakes  
-(c) Syntax/Grammar
-(i) Subject-Verb agreement  
-  (ii) Verb tense / missing verb / extra verb  
-  (iii) Sentence formation  
-(d) Semantics  
-  (i) Is the essay coherent  
-  (ii) Does the essay answer the question / address the topic?  
-Various tools like NLTK , Stanford Core NLP , WordNet, Pattern, etc, were used to grade essays of standardized tests such as TOEFL. 
-Essays are issued as the dataset by ETS (Educational Testing Services, https://www.ets.org/) which administers TOEFL, GRE, etc.
+
+## Installation
+Just run the bash file as mentioned below and the installlation will be done automatically
 
 ## Usage
 To use autograder go to executable folder and run  
