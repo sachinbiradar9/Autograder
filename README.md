@@ -1,5 +1,5 @@
 # Autograder
-:trophy: Won the Project Competition with test accuracy of 94%  
+:trophy: Won the NLP Project Competition with test accuracy of 94%  
 
 System that can automatically grade student essays. NLP techniques were the center of automated scoring. Various factors to grade were -
 
