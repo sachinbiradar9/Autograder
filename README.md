@@ -31,3 +31,7 @@ Just run the bash file as mentioned below and the installlation will be done aut
 Make sure [stanford core nlp](http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip) server is running.  
 Go to executable folder and run  
 `bash run.sh`
+
+## Credits
+- [Dr. Barbara Di Eugenio](https://www.cs.uic.edu/k-teacher/barbara-di-eugenio-phd/)
+- Abhinav Kumar
