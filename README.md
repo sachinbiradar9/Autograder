@@ -21,9 +21,13 @@ System that can automatically grade student essays. NLP techniques were the cent
     </ol>
 </ol>
 
+The final score is calculated using the below formula -  
+Final Score = ```2a − 2b + 0.2c.i + 0.8c.ii + 2c.iii + 2d.i + 3d.ii```
+
 ## Installation
 Just run the bash file as mentioned below and the installlation will be done automatically
 
 ## Usage
-To use autograder go to executable folder and run  
+Make sure [stanford core nlp](http://nlp.stanford.edu/software/stanford-corenlp-full-2018-02-27.zip) server is running.  
+Go to executable folder and run  
 `bash run.sh`
